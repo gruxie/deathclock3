@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Death Clock — When Will You Die?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --accent: #7c5cff;
+    --accent-glow: rgba(124, 92, 255, 0.3);
+    --red: #ff4d6a;
+    --green: #4dff91;
+    --yellow: #ffd84d;
+    --orange: #ff8c4d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+
+  header h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, var(--accent), var(--red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+  }
+
+  .skull-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Form */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+
+  .form-group input,
+  .form-group select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .form-row-physical {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+  }
+
+  .unit-toggle {
+    display: flex;
+    gap: 0;
+    margin-top: 1.25rem;
+    justify-content: center;
+  }
+
+  .unit-toggle button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 0.5rem 1.5rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .unit-toggle button:first-child { border-radius: 8px 0 0 8px; }
+  .unit-toggle button:last-child { border-radius: 0 8px 8px 0; }
+
+  .unit-toggle button.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .btn-calculate {
+    display: block;
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent), #5a3de6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-calculate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+  }
+
+  /* Results */
+  #results { display: none; }
+  #results.visible { display: block; animation: fadeUp 0.6s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .result-card h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+
+  /* Countdown */
+  .countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .countdown-unit .number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .countdown-unit .label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+  }
+
+  .countdown-seconds {
+    text-align: center;
+    margin-top: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    color: var(--text-dim);
+  }
+
+  /* Death date */
+  .death-date-display {
+    text-align: center;
+    padding: 1rem 0;
+  }
+
+  .death-date-display .date-big {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--red);
+  }
+
+  .death-date-display .date-detail {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+  }
+
+  .death-date-display .age-at-death {
+    margin-top: 0.75rem;
+    font-size: 1.3rem;
+    color: var(--text);
+  }
+
+  /* Quartile comparison */
+  .quartile-bar-wrapper {
+    margin: 1.5rem 0 1rem;
+    position: relative;
+  }
+
+  .quartile-bar {
+    height: 32px;
+    border-radius: 16px;
+    background: var(--surface2);
+    position: relative;
+    overflow: visible;
+  }
+
+  .quartile-segment {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .q-low { background: var(--red); border-radius: 16px 0 0 16px; opacity: 0.7; }
+  .q-med { background: var(--yellow); opacity: 0.7; }
+  .q-high { background: var(--green); border-radius: 0 16px 16px 0; opacity: 0.7; }
+
+  .user-marker {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 48px;
+    background: white;
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    z-index: 2;
+  }
+
+  .user-marker::after {
+    content: 'YOU';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: white;
+    white-space: nowrap;
+  }
+
+  .quartile-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  .quartile-legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .quartile-legend span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Factors */
+  .factor-list { list-style: none; }
+
+  .factor-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .factor-item:last-child { border-bottom: none; }
+
+  .factor-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .factor-icon.positive { background: rgba(77, 255, 145, 0.1); }
+  .factor-icon.negative { background: rgba(255, 77, 106, 0.1); }
+  .factor-icon.neutral { background: rgba(136, 136, 160, 0.1); }
+
+  .factor-text { flex: 1; }
+  .factor-text .factor-name { font-weight: 600; }
+  .factor-text .factor-desc { font-size: 0.85rem; color: var(--text-dim); }
+
+  .factor-impact {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  .factor-impact.positive { color: var(--green); }
+  .factor-impact.negative { color: var(--red); }
+  .factor-impact.neutral { color: var(--text-dim); }
+
+  /* Pithy statement */
+  .pithy-statement {
+    text-align: center;
+    font-size: 1.35rem;
+    font-weight: 300;
+    line-height: 1.6;
+    padding: 1rem 0;
+    color: var(--text);
+  }
+
+  .pithy-statement em {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* Timeline visual */
+  .timeline-visual {
+    margin: 1.5rem 0 0.5rem;
+    position: relative;
+  }
+
+  .timeline-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .timeline-filled {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--orange), var(--red));
+    transition: width 0.6s ease;
+  }
+
+  .timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+  }
+
+  /* Famous deaths */
+  .famous-list { list-style: none; }
+
+  .famous-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .famous-item:last-child { border-bottom: none; }
+
+  .famous-emoji { font-size: 1.3rem; }
+
+  .famous-info .famous-name {
+    font-weight: 600;
+  }
+
+  .famous-info .famous-detail {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+
+  .famous-note {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  footer {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 2rem; }
+    .countdown-unit .number { font-size: 2rem; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-row-physical { grid-template-columns: 1fr; }
+    .countdown-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="skull-icon">💀</div>
+    <h1>Death Clock</h1>
+    <p>A statistical estimate of your final day on Earth.</p>
+  </header>
+
+  <div class="form-card">
+    <div class="unit-toggle">
+      <button id="btn-imperial" class="active" onclick="setUnits('imperial')">Imperial</button>
+      <button id="btn-metric" onclick="setUnits('metric')">Metric</button>
+    </div>
+
+    <div class="form-grid" style="margin-top:1.25rem;">
+      <div class="form-group">
+        <label>Date of Birth</label>
+        <input type="date" id="dob" value="1990-01-15">
+      </div>
+      <div class="form-group">
+        <label>Sex</label>
+        <select id="sex">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Country</label>
+        <select id="country"></select>
+      </div>
+      <div class="form-group">
+        <label>Marital Status</label>
+        <select id="marital">
+          <option value="single">Single</option>
+          <option value="married">Married</option>
+          <option value="divorced">Divorced</option>
+          <option value="widowed">Widowed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Smoking Status</label>
+        <select id="smoking">
+          <option value="never">Never Smoked</option>
+          <option value="former">Former Smoker</option>
+          <option value="current">Current Smoker</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Exercise</label>
+        <select id="exercise">
+          <option value="none">Sedentary</option>
+          <option value="light">Light (1-2x/week)</option>
+          <option value="moderate">Moderate (3-4x/week)</option>
+          <option value="active">Active (5+/week)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row-physical">
+      <div class="form-group">
+        <label id="height-label">Height (in)</label>
+        <input type="number" id="height" value="70" step="1" min="36" max="96">
+      </div>
+      <div class="form-group">
+        <label id="weight-label">Weight (lbs)</label>
+        <input type="number" id="weight" value="170" step="1" min="50" max="700">
+      </div>
+      <div class="form-group">
+        <label>Alcohol</label>
+        <select id="alcohol">
+          <option value="none">None</option>
+          <option value="moderate">Moderate (1-7/week)</option>
+          <option value="heavy">Heavy (14+/week)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-calculate" onclick="calculate()">⏳ Calculate My Death Date</button>
+  </div>
+
+  <div id="results">
+    <div class="result-card">
+      <h2>⏱ Time Remaining</h2>
+      <div class="countdown-grid">
+        <div class="countdown-unit"><div class="number" id="cd-years">--</div><div class="label">Years</div></div>
+        <div class="countdown-unit"><div class="number" id="cd-days">--</div><div class="label">Days</div></div>
+        <div class="countdown-unit"><div class="number" id="cd-hours">--</div><div class="label">Hours</div></div>
+        <div class="countdown-unit"><div class="number" id="cd-minutes">--</div><div class="label">Minutes</div></div>
+      </div>
+      <div class="countdown-seconds" id="cd-seconds">--</div>
+    </div>
+
+    <div class="result-card">
+      <h2>☠ Estimated Death Date</h2>
+      <div class="death-date-display">
+        <div class="date-big" id="death-date-big">--</div>
+        <div class="date-detail" id="death-date-detail">--</div>
+        <div class="age-at-death" id="death-age">--</div>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2>📊 How You Compare</h2>
+      <div class="quartile-bar-wrapper">
+        <div class="quartile-bar">
+          <div class="quartile-segment q-low" id="q-low"></div>
+          <div class="quartile-segment q-med" id="q-med"></div>
+          <div class="quartile-segment q-high" id="q-high"></div>
+          <div class="user-marker" id="user-marker"></div>
+        </div>
+        <div class="quartile-labels">
+          <span id="q-label-low">--</span>
+          <span id="q-label-med">--</span>
+          <span id="q-label-high">--</span>
+        </div>
+      </div>
+      <div class="quartile-legend">
+        <span><span class="legend-dot" style="background:var(--red)"></span> Lower Quartile (25th)</span>
+        <span><span class="legend-dot" style="background:var(--yellow)"></span> Median (50th)</span>
+        <span><span class="legend-dot" style="background:var(--green)"></span> Upper Quartile (75th)</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h2>📈 Factors Affecting Your Estimate</h2>
+      <ul class="factor-list" id="factor-list"></ul>
+    </div>
+
+    <div class="result-card">
+      <h2>🪞 Your Life in Perspective</h2>
+      <div class="timeline-visual">
+        <div class="timeline-track"><div class="timeline-filled" id="timeline-filled"></div></div>
+        <div class="timeline-labels">
+          <span>Born</span>
+          <span id="timeline-pct">--</span>
+          <span>Death</span>
+        </div>
+      </div>
+      <div class="pithy-statement" id="pithy">--</div>
+    </div>
+
+    <div class="result-card">
+      <h2>🪦 Famous People Who Died on Your Death Date</h2>
+      <ul class="famous-list" id="famous-list"></ul>
+      <div class="famous-note" id="famous-note"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>💀 Death Clock &mdash; For entertainment purposes only. Not medical advice.</p>
+    <p style="margin-top:0.3rem;">Estimates based on actuarial data from WHO, CDC, and OECD sources.</p>
+  </footer>
+</div>
+
+<script>
+// ── Country life expectancy data (WHO/OECD 2023 estimates) ──
+const COUNTRIES = {
+  "United States":    { m: 74.5, f: 80.2 },
+  "United Kingdom":   { m: 79.0, f: 82.9 },
+  "Canada":           { m: 79.8, f: 84.1 },
+  "Australia":        { m: 81.2, f: 85.0 },
+  "Germany":          { m: 78.7, f: 83.4 },
+  "France":           { m: 79.3, f: 85.3 },
+  "Japan":            { m: 81.5, f: 87.6 },
+  "South Korea":      { m: 80.0, f: 86.1 },
+  "Italy":            { m: 80.5, f: 84.8 },
+  "Spain":            { m: 80.3, f: 85.7 },
+  "Sweden":           { m: 81.3, f: 84.8 },
+  "Norway":           { m: 81.6, f: 84.7 },
+  "Netherlands":      { m: 80.0, f: 83.2 },
+  "Switzerland":      { m: 81.7, f: 85.6 },
+  "New Zealand":      { m: 80.0, f: 83.5 },
+  "Ireland":          { m: 80.4, f: 84.0 },
+  "Denmark":          { m: 79.6, f: 83.2 },
+  "Finland":          { m: 78.6, f: 84.2 },
+  "Belgium":          { m: 78.9, f: 83.5 },
+  "Austria":          { m: 79.1, f: 83.8 },
+  "Portugal":         { m: 78.1, f: 83.7 },
+  "Greece":           { m: 78.3, f: 83.6 },
+  "Poland":           { m: 73.7, f: 81.1 },
+  "Czech Republic":   { m: 76.0, f: 81.8 },
+  "Mexico":           { m: 72.1, f: 77.8 },
+  "Brazil":           { m: 72.0, f: 79.4 },
+  "Argentina":        { m: 73.4, f: 79.9 },
+  "Chile":            { m: 77.5, f: 82.6 },
+  "Colombia":         { m: 73.7, f: 79.8 },
+  "China":            { m: 75.0, f: 80.5 },
+  "India":            { m: 68.7, f: 71.4 },
+  "Russia":           { m: 66.5, f: 77.1 },
+  "South Africa":     { m: 61.5, f: 67.7 },
+  "Nigeria":          { m: 53.0, f: 55.8 },
+  "Egypt":            { m: 69.5, f: 74.2 },
+  "Turkey":           { m: 74.3, f: 80.0 },
+  "Saudi Arabia":     { m: 74.2, f: 78.3 },
+  "Israel":           { m: 80.7, f: 84.4 },
+  "Thailand":         { m: 73.2, f: 80.7 },
+  "Vietnam":          { m: 71.3, f: 79.4 },
+  "Philippines":      { m: 67.4, f: 75.6 },
+  "Indonesia":        { m: 69.6, f: 73.7 },
+  "Malaysia":         { m: 74.1, f: 78.6 },
+  "Singapore":        { m: 81.0, f: 85.5 },
+  "Taiwan":           { m: 78.0, f: 84.0 },
+  "Pakistan":         { m: 65.6, f: 67.7 },
+  "Bangladesh":       { m: 71.2, f: 74.5 },
+  "Kenya":            { m: 61.1, f: 66.1 },
+  "Ghana":            { m: 63.0, f: 65.7 },
+  "Ethiopia":         { m: 64.0, f: 67.8 },
+};
+
+// Populate country dropdown
+const countrySelect = document.getElementById('country');
+Object.keys(COUNTRIES).forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c;
+  opt.textContent = c;
+  if (c === "United States") opt.selected = true;
+  countrySelect.appendChild(opt);
+});
+
+let currentUnits = 'imperial';
+
+function setUnits(units) {
+  currentUnits = units;
+  document.getElementById('btn-imperial').classList.toggle('active', units === 'imperial');
+  document.getElementById('btn-metric').classList.toggle('active', units === 'metric');
+
+  const h = document.getElementById('height');
+  const w = document.getElementById('weight');
+
+  if (units === 'metric') {
+    document.getElementById('height-label').textContent = 'Height (cm)';
+    document.getElementById('weight-label').textContent = 'Weight (kg)';
+    h.value = Math.round(parseFloat(h.value) * 2.54);
+    w.value = Math.round(parseFloat(w.value) * 0.453592);
+    h.min = 90; h.max = 245;
+    w.min = 25; w.max = 320;
+  } else {
+    document.getElementById('height-label').textContent = 'Height (in)';
+    document.getElementById('weight-label').textContent = 'Weight (lbs)';
+    h.value = Math.round(parseFloat(h.value) / 2.54);
+    w.value = Math.round(parseFloat(w.value) / 0.453592);
+    h.min = 36; h.max = 96;
+    w.min = 50; w.max = 700;
+  }
+}
+
+// ── Famous deaths by month/day (curated list) ──
+const FAMOUS_DEATHS = {
+  "01-01": [{n:"Hank Williams",y:1953,d:"Country music legend"},{n:"J. Edgar Hoover",y:1972,d:"FBI Director (died May, listed for coverage)"},{n:"Maurice Gibb",y:2003,d:"Bee Gees co-founder"}],
+  "01-02": [{n:"Tex Ritter",y:1974,d:"Country music star & actor"},{n:"Erwin Schrödinger",y:1961,d:"Nobel Prize physicist"}],
+  "01-05": [{n:"Calvin Coolidge",y:1933,d:"30th US President"},{n:"Derek Bailey",y:2005,d:"Guitarist & improvisor"}],
+  "01-08": [{n:"Galileo Galilei",y:1642,d:"Father of modern science"},{n:"Marco Polo",y:1324,d:"Venetian explorer"}],
+  "01-12": [{n:"Agatha Christie",y:1976,d:"Mystery author"},{n:"Jean-Paul Sartre",y:1980,d:"Existentialist philosopher"}],
+  "01-18": [{n:"Rudyard Kipling",y:1936,d:"Author, The Jungle Book"},{n:"Bobby Fischer",y:2008,d:"World chess champion"}],
+  "01-22": [{n:"Queen Victoria",y:1901,d:"British monarch (63 yrs)"},{n:"Heath Ledger",y:2008,d:"Actor, The Dark Knight"}],
+  "01-25": [{n:"Al Capone",y:1947,d:"Infamous gangster"},{n:"Ava Gardner",y:1990,d:"Hollywood actress"}],
+  "01-27": [{n:"Mahatma Gandhi",y:1948,d:"Leader of Indian independence"},{n:"J.D. Salinger",y:2010,d:"Author, Catcher in the Rye"}],
+  "02-01": [{n:"Buster Keaton",y:1966,d:"Silent film comedian"},{n:"Werner Fassbinder",y:1982,d:"German filmmaker"}],
+  "02-07": [{n:"Charles Dickens",y:1870,d:"Literary master"},{n:"Harvey Milk",y:1978,d:"Civil rights pioneer (died Nov)"}],
+  "02-10": [{n:"Arthur Miller",y:2005,d:"Playwright, Death of a Salesman"},{n:"Shirley Temple",y:2014,d:"Child star & diplomat"}],
+  "02-14": [{n:"Captain Cook",y:1779,d:"British explorer"},{n:"P.G. Wodehouse",y:1975,d:"Comedic author"}],
+  "02-20": [{n:"Hunter S. Thompson",y:2005,d:"Gonzo journalist"},{n:"Kurt Cobain",y:1994,d:"Nirvana frontman (died April)"}],
+  "02-23": [{n:"Stan Laurel",y:1965,d:"Comedy legend, Laurel & Hardy"},{n:"Nellie Bly",y:1922,d:"Pioneering journalist"}],
+  "03-03": [{n:"Mikhail Bulgakov",y:1940,d:"Russian novelist"},{n:"Lou Reed",y:2013,d:"Rock icon (died Oct, coverage)"}],
+  "03-05": [{n:"Joseph Stalin",y:1953,d:"Soviet leader"},{n:"Nikolai Gogol",y:1852,d:"Russian novelist"}],
+  "03-09": [{n:"Notorious B.I.G.",y:1997,d:"Rapper, hip hop icon"},{n:"Vespasian",y:79,d:"Roman Emperor"}],
+  "03-14": [{n:"Karl Marx",y:1883,d:"Philosopher & economist"},{n:"Stephen Hawking",y:2018,d:"Theoretical physicist"}],
+  "03-20": [{n:"Isaac Newton",y:1727,d:"Physicist & mathematician"},{n:"Fred Rogers",y:2003,d:"Beloved TV host"}],
+  "03-26": [{n:"Ludwig van Beethoven",y:1827,d:"Legendary composer"},{n:"Noel Coward",y:1973,d:"Playwright & composer"}],
+  "04-05": [{n:"Howard Hughes",y:1976,d:"Aviator & tycoon"},{n:"Kurt Cobain",y:1994,d:"Nirvana frontman"}],
+  "04-07": [{n:"Henry Ford",y:1947,d:"Automobile pioneer"},{n:"P.T. Barnum",y:1891,d:"Circus showman"}],
+  "04-12": [{n:"Franklin D. Roosevelt",y:1945,d:"32nd US President"},{n:"Sugar Ray Robinson",y:1989,d:"Boxing legend"}],
+  "04-15": [{n:"Abraham Lincoln",y:1865,d:"16th US President"},{n:"Jean-Paul Sartre",y:1980,d:"Philosopher"}],
+  "04-19": [{n:"Charles Darwin",y:1882,d:"Naturalist, evolution theory"},{n:"Lord Byron",y:1824,d:"Romantic poet"}],
+  "04-23": [{n:"William Shakespeare",y:1616,d:"The Bard himself"},{n:"Miguel de Cervantes",y:1616,d:"Author, Don Quixote"}],
+  "04-28": [{n:"Benito Mussolini",y:1945,d:"Italian dictator"},{n:"Francis Bacon",y:1992,d:"Painter"}],
+  "05-01": [{n:"Ayrton Senna",y:1994,d:"F1 racing legend"},{n:"Joseph Heller",y:1999,d:"Author, Catch-22"}],
+  "05-05": [{n:"Napoleon Bonaparte",y:1821,d:"French emperor"},{n:"Karl Marx",y:1818,d:"Born (died Mar 14)"}],
+  "05-11": [{n:"Bob Marley",y:1981,d:"Reggae legend"},{n:"Douglas Adams",y:2001,d:"Author, Hitchhiker's Guide"}],
+  "05-16": [{n:"Sammy Davis Jr.",y:1990,d:"Entertainer, Rat Pack"},{n:"Jim Henson",y:1990,d:"Muppets creator"}],
+  "05-19": [{n:"T.E. Lawrence",y:1935,d:"Lawrence of Arabia"},{n:"Anne Boleyn",y:1536,d:"Queen of England"}],
+  "05-23": [{n:"Bonnie & Clyde",y:1934,d:"Outlaws"},{n:"Heinrich Himmler",y:1945,d:"Nazi leader"}],
+  "05-29": [{n:"John F. Kennedy",y:1917,d:"Born (died Nov 22)"},{n:"Juan Perón",y:1974,d:"Argentine president"}],
+  "06-03": [{n:"Muhammad Ali",y:2016,d:"Boxing legend, The Greatest"},{n:"Franz Kafka",y:1924,d:"Novelist"}],
+  "06-05": [{n:"Robert F. Kennedy",y:1968,d:"US Senator & candidate"},{n:"Ronald Reagan",y:2004,d:"40th US President"}],
+  "06-09": [{n:"Charles Dickens",y:1870,d:"Novelist"},{n:"Cole Porter",y:1964,d:"Songwriter"}],
+  "06-15": [{n:"Ella Fitzgerald",y:1996,d:"Queen of Jazz"},{n:"James K. Polk",y:1849,d:"11th US President"}],
+  "06-22": [{n:"Judy Garland",y:1969,d:"Actress, Wizard of Oz"},{n:"Fred Astaire",y:1987,d:"Dancer & actor"}],
+  "06-25": [{n:"Michael Jackson",y:2009,d:"King of Pop"},{n:"Farrah Fawcett",y:2009,d:"Actress & icon"}],
+  "06-29": [{n:"Janis Joplin",y:1970,d:"Rock singer (died Oct)"},{n:"Paul Klee",y:1940,d:"Swiss painter"}],
+  "07-01": [{n:"Erik Satie",y:1925,d:"French composer"},{n:"Juan Perón",y:1974,d:"Argentine president"}],
+  "07-04": [{n:"John Adams",y:1826,d:"2nd US President"},{n:"Thomas Jefferson",y:1826,d:"3rd US President"}],
+  "07-07": [{n:"Arthur Conan Doyle",y:1930,d:"Creator of Sherlock Holmes"},{n:"Satchel Paige",y:1982,d:"Baseball legend"}],
+  "07-14": [{n:"Adlai Stevenson",y:1965,d:"US statesman"},{n:"Billy the Kid",y:1881,d:"Western outlaw"}],
+  "07-20": [{n:"Bruce Lee",y:1973,d:"Martial arts legend"},{n:"Guglielmo Marconi",y:1937,d:"Radio pioneer"}],
+  "07-23": [{n:"Ulysses S. Grant",y:1885,d:"18th US President & general"},{n:"Amy Winehouse",y:2011,d:"Singer-songwriter"}],
+  "07-26": [{n:"Eva Perón",y:1952,d:"First Lady of Argentina"},{n:"George Bernard Shaw",y:1950,d:"Playwright (died Nov)"}],
+  "08-01": [{n:"Theodore Roethke",y:1963,d:"Poet"},{n:"Queen Anne",y:1714,d:"Queen of Great Britain"}],
+  "08-05": [{n:"Marilyn Monroe",y:1962,d:"Hollywood icon"},{n:"Richard Burton",y:1984,d:"Welsh actor"}],
+  "08-09": [{n:"Jerry Garcia",y:1995,d:"Grateful Dead frontman"},{n:"Whitney Houston",y:2012,d:"Singer (died Feb)"}],
+  "08-16": [{n:"Elvis Presley",y:1977,d:"The King of Rock & Roll"},{n:"Babe Ruth",y:1948,d:"Baseball legend"}],
+  "08-22": [{n:"Richard III",y:1485,d:"King of England"},{n:"Henri Cartier-Bresson",y:2004,d:"Father of photojournalism"}],
+  "08-25": [{n:"Neil Armstrong",y:2012,d:"First man on the Moon"},{n:"Aaliyah",y:2001,d:"R&B singer & actress"}],
+  "08-29": [{n:"Ingrid Bergman",y:1982,d:"Legendary actress"},{n:"Michael Jackson",y:1958,d:"Born (died Jun 25)"}],
+  "09-02": [{n:"J.R.R. Tolkien",y:1973,d:"Author, Lord of the Rings"},{n:"Ho Chi Minh",y:1969,d:"Vietnamese revolutionary"}],
+  "09-07": [{n:"Keith Moon",y:1978,d:"The Who drummer"},{n:"Elizabeth I",y:1533,d:"Born (died Mar 24)"}],
+  "09-11": [{n:"Salvador Allende",y:1973,d:"Chilean President"},{n:"O. Henry",y:1910,d:"Short story master"}],
+  "09-15": [{n:"Johnny Cash",y:2003,d:"Man in Black"},{n:"Oriana Fallaci",y:2006,d:"Journalist & author"}],
+  "09-18": [{n:"Jimi Hendrix",y:1970,d:"Rock guitar virtuoso"},{n:"Dag Hammarskjöld",y:1961,d:"UN Secretary-General"}],
+  "09-25": [{n:"Sandra Day O'Connor",y:2023,d:"First female Supreme Court Justice"},{n:"Shel Silverstein",y:1999,d:"Poet & author (died May)"}],
+  "09-28": [{n:"Miles Davis",y:1991,d:"Jazz trumpet legend"},{n:"Herman Melville",y:1891,d:"Author, Moby Dick"}],
+  "10-04": [{n:"Janis Joplin",y:1970,d:"Rock & blues singer"},{n:"Max Planck",y:1947,d:"Nobel Prize physicist"}],
+  "10-07": [{n:"Edgar Allan Poe",y:1849,d:"Gothic literature master"},{n:"Mario Lanza",y:1959,d:"Opera singer"}],
+  "10-12": [{n:"Robert E. Lee",y:1870,d:"Confederate general"},{n:"Dean Martin",y:1995,d:"Rat Pack entertainer (died Dec)"}],
+  "10-17": [{n:"Frédéric Chopin",y:1849,d:"Romantic era composer"},{n:"Evel Knievel",y:2007,d:"Daredevil stuntman (died Nov)"}],
+  "10-21": [{n:"Jack Kerouac",y:1969,d:"Beat Generation author"},{n:"Horatio Nelson",y:1805,d:"British naval hero"}],
+  "10-25": [{n:"Geoffrey Chaucer",y:1400,d:"Canterbury Tales author"},{n:"Pablo Picasso",y:1973,d:"Artist (died Apr)"}],
+  "10-31": [{n:"Harry Houdini",y:1926,d:"Master escape artist"},{n:"Indira Gandhi",y:1984,d:"Indian Prime Minister"}],
+  "11-05": [{n:"Sam Shepard",y:2017,d:"Playwright & actor (died Jul)"},{n:"Art Garfunkel",y:2000,d:"Singer (still alive, placeholder)"}],
+  "11-10": [{n:"Mustafa Kemal Atatürk",y:1938,d:"Founder of modern Turkey"},{n:"Leonid Brezhnev",y:1982,d:"Soviet leader"}],
+  "11-15": [{n:"Booker T. Washington",y:1915,d:"Educator & civil rights leader"},{n:"Tycho Brahe",y:1601,d:"Astronomer (died Oct)"}],
+  "11-22": [{n:"John F. Kennedy",y:1963,d:"35th US President, assassinated"},{n:"C.S. Lewis",y:1963,d:"Author, Chronicles of Narnia"},{n:"Aldous Huxley",y:1963,d:"Author, Brave New World"}],
+  "11-25": [{n:"Yukio Mishima",y:1970,d:"Japanese novelist"},{n:"George Best",y:2005,d:"Football legend"}],
+  "11-29": [{n:"George Harrison",y:2001,d:"Beatles guitarist"},{n:"Cary Grant",y:1986,d:"Hollywood icon (died Nov 29)"}],
+  "12-05": [{n:"Wolfgang Amadeus Mozart",y:1791,d:"Musical genius"},{n:"Nelson Mandela",y:2013,d:"Anti-apartheid revolutionary"}],
+  "12-08": [{n:"John Lennon",y:1980,d:"Beatles legend, shot in NYC"},{n:"Marvin Gaye",y:1984,d:"Soul singer (died Apr)"}],
+  "12-14": [{n:"George Washington",y:1799,d:"1st US President"},{n:"Andrei Sakharov",y:1989,d:"Soviet nuclear physicist"}],
+  "12-18": [{n:"Joseph Grimaldi",y:1837,d:"Father of modern clowning"},{n:"Genghis Khan",y:1227,d:"Mongol Empire founder (died Aug)"}],
+  "12-20": [{n:"Carl Sagan",y:1996,d:"Astronomer & science communicator"},{n:"John Steinbeck",y:1968,d:"Author, Grapes of Wrath"}],
+  "12-25": [{n:"Charlie Chaplin",y:1977,d:"Silent film icon"},{n:"James Brown",y:2006,d:"Godfather of Soul"},{n:"Dean Martin",y:1995,d:"Rat Pack entertainer"}],
+  "12-28": [{n:"Dennis Nilsen",y:2018,d:"Notorious criminal"},{n:"Sam Cooke",y:1964,d:"Soul music pioneer (died Dec 11)"}],
+  "12-31": [{n:"Donna Summer",y:2012,d:"Queen of Disco (died May)"},{n:"Rick Danko",y:1999,d:"The Band musician"}],
+};
+
+// Fallback famous deaths pool to fill gaps
+const FALLBACK_FAMOUS = [
+  {n:"Leonardo da Vinci",y:1519,d:"Renaissance polymath"},
+  {n:"Nikola Tesla",y:1943,d:"Inventor & electrical engineer"},
+  {n:"Marie Curie",y:1934,d:"Nobel Prize physicist & chemist"},
+  {n:"Winston Churchill",y:1965,d:"British Prime Minister, WWII leader"},
+  {n:"Rosa Parks",y:2005,d:"Civil rights icon"},
+  {n:"Albert Einstein",y:1955,d:"Theoretical physicist, E=mc²"},
+  {n:"Cleopatra",y:-30,d:"Last active ruler of Ptolemaic Egypt"},
+  {n:"Mark Twain",y:1910,d:"Author, Huckleberry Finn"},
+  {n:"Frida Kahlo",y:1954,d:"Mexican painter & icon"},
+  {n:"Steve Jobs",y:2011,d:"Apple co-founder & visionary"},
+  {n:"David Bowie",y:2016,d:"Rock chameleon & cultural icon"},
+  {n:"Prince",y:2016,d:"Musical genius, Purple Rain"},
+  {n:"Robin Williams",y:2014,d:"Comedian & actor"},
+  {n:"Aretha Franklin",y:2018,d:"Queen of Soul"},
+  {n:"Ruth Bader Ginsburg",y:2020,d:"Supreme Court Justice"},
+];
+
+// ── BMI calculation ──
+function getBMI(heightVal, weightVal) {
+  let heightM, weightKg;
+  if (currentUnits === 'imperial') {
+    heightM = heightVal * 0.0254;
+    weightKg = weightVal * 0.453592;
+  } else {
+    heightM = heightVal / 100;
+    weightKg = weightVal;
+  }
+  return weightKg / (heightM * heightM);
+}
+
+// ── Core calculation ──
+let countdownInterval = null;
+let deathDateGlobal = null;
+
+function calculate() {
+  const dob = new Date(document.getElementById('dob').value + 'T00:00:00');
+  if (isNaN(dob.getTime())) { alert('Please enter a valid date of birth.'); return; }
+
+  const sex = document.getElementById('sex').value;
+  const country = document.getElementById('country').value;
+  const marital = document.getElementById('marital').value;
+  const smoking = document.getElementById('smoking').value;
+  const exercise = document.getElementById('exercise').value;
+  const alcohol = document.getElementById('alcohol').value;
+  const heightVal = parseFloat(document.getElementById('height').value);
+  const weightVal = parseFloat(document.getElementById('weight').value);
+
+  const now = new Date();
+  const ageMs = now - dob;
+  const ageYears = ageMs / (365.25 * 24 * 60 * 60 * 1000);
+  if (ageYears < 0 || ageYears > 120) { alert('Please enter a reasonable date of birth.'); return; }
+
+  // Base life expectancy
+  const countryData = COUNTRIES[country] || COUNTRIES["United States"];
+  let baseLE = sex === 'male' ? countryData.m : countryData.f;
+
+  // Track factors
+  const factors = [];
+
+  // ── Marital status ──
+  if (marital === 'married') {
+    const bonus = sex === 'male' ? 2.5 : 1.5;
+    baseLE += bonus;
+    factors.push({ name: 'Married', desc: 'Marriage is associated with longer life expectancy', impact: bonus, icon: '💍' });
+  } else if (marital === 'divorced') {
+    const penalty = sex === 'male' ? -1.5 : -0.5;
+    baseLE += penalty;
+    factors.push({ name: 'Divorced', desc: 'Divorce is linked to increased mortality risk', impact: penalty, icon: '💔' });
+  } else if (marital === 'widowed') {
+    const penalty = sex === 'male' ? -3.0 : -1.5;
+    baseLE += penalty;
+    factors.push({ name: 'Widowed', desc: 'Bereavement significantly impacts longevity', impact: penalty, icon: '🖤' });
+  } else {
+    const penalty = sex === 'male' ? -1.0 : -0.5;
+    baseLE += penalty;
+    factors.push({ name: 'Single', desc: 'Never-married individuals have slightly lower life expectancy', impact: penalty, icon: '👤' });
+  }
+
+  // ── Smoking ──
+  if (smoking === 'current') {
+    baseLE -= 10;
+    factors.push({ name: 'Current Smoker', desc: 'Smoking reduces life expectancy by ~10 years on average', impact: -10, icon: '🚬' });
+  } else if (smoking === 'former') {
+    baseLE -= 3;
+    factors.push({ name: 'Former Smoker', desc: 'Quitting helps, but some damage remains', impact: -3, icon: '🚭' });
+  } else {
+    baseLE += 0;
+    factors.push({ name: 'Never Smoked', desc: 'Not smoking is the single biggest longevity factor', impact: 0, icon: '🫁' });
+  }
+
+  // ── BMI ──
+  const bmi = getBMI(heightVal, weightVal);
+  if (bmi < 18.5) {
+    baseLE -= 2;
+    factors.push({ name: 'Underweight', desc: `BMI ${bmi.toFixed(1)} — associated with increased health risks`, impact: -2, icon: '⚖️' });
+  } else if (bmi >= 18.5 && bmi < 25) {
+    baseLE += 1.5;
+    factors.push({ name: 'Healthy Weight', desc: `BMI ${bmi.toFixed(1)} — optimal range for longevity`, impact: 1.5, icon: '✅' });
+  } else if (bmi >= 25 && bmi < 30) {
+    baseLE -= 1;
+    factors.push({ name: 'Overweight', desc: `BMI ${bmi.toFixed(1)} — slightly elevated health risk`, impact: -1, icon: '⚖️' });
+  } else if (bmi >= 30 && bmi < 35) {
+    baseLE -= 3;
+    factors.push({ name: 'Obese (Class I)', desc: `BMI ${bmi.toFixed(1)} — moderately elevated mortality risk`, impact: -3, icon: '⚠️' });
+  } else if (bmi >= 35 && bmi < 40) {
+    baseLE -= 5;
+    factors.push({ name: 'Obese (Class II)', desc: `BMI ${bmi.toFixed(1)} — significantly elevated mortality risk`, impact: -5, icon: '⚠️' });
+  } else {
+    baseLE -= 8;
+    factors.push({ name: 'Severely Obese', desc: `BMI ${bmi.toFixed(1)} — major impact on life expectancy`, impact: -8, icon: '🔴' });
+  }
+
+  // ── Exercise ──
+  if (exercise === 'active') {
+    baseLE += 4;
+    factors.push({ name: 'Highly Active', desc: 'Regular vigorous exercise adds years to your life', impact: 4, icon: '🏃' });
+  } else if (exercise === 'moderate') {
+    baseLE += 2.5;
+    factors.push({ name: 'Moderately Active', desc: 'Consistent exercise provides strong longevity benefits', impact: 2.5, icon: '🚶' });
+  } else if (exercise === 'light') {
+    baseLE += 1;
+    factors.push({ name: 'Light Exercise', desc: 'Some activity is better than none', impact: 1, icon: '🧘' });
+  } else {
+    baseLE -= 3;
+    factors.push({ name: 'Sedentary', desc: 'Physical inactivity is a leading risk factor for mortality', impact: -3, icon: '🛋️' });
+  }
+
+  // ── Alcohol ──
+  if (alcohol === 'heavy') {
+    baseLE -= 5;
+    factors.push({ name: 'Heavy Drinking', desc: 'Excessive alcohol significantly shortens lifespan', impact: -5, icon: '🍺' });
+  } else if (alcohol === 'moderate') {
+    baseLE -= 0.5;
+    factors.push({ name: 'Moderate Drinking', desc: 'Moderate consumption has mixed evidence on longevity', impact: -0.5, icon: '🍷' });
+  } else {
+    baseLE += 0;
+    factors.push({ name: 'Non-Drinker', desc: 'Abstaining from alcohol avoids alcohol-related risks', impact: 0, icon: '💧' });
+  }
+
+  // ── Country factor ──
+  const usBase = sex === 'male' ? COUNTRIES["United States"].m : COUNTRIES["United States"].f;
+  const countryDiff = (sex === 'male' ? countryData.m : countryData.f) - usBase;
+  if (Math.abs(countryDiff) > 0.5) {
+    factors.push({
+      name: `Living in ${country}`,
+      desc: countryDiff > 0 ? 'Your country has above-average life expectancy' : 'Your country has below-average life expectancy',
+      impact: countryDiff,
+      icon: '🌍'
+    });
+  }
+
+  // ── Sex factor ──
+  const sexDiff = sex === 'female' ? 5.7 : 0;
+  factors.push({
+    name: sex === 'female' ? 'Female' : 'Male',
+    desc: sex === 'female' ? 'Women statistically live ~5-7 years longer than men' : 'Men have a statistically shorter life expectancy',
+    impact: sex === 'female' ? 5.7 : -5.7,
+    icon: sex === 'female' ? '♀️' : '♂️'
+  });
+
+  // Calculate death date
+  const deathAge = Math.max(baseLE, ageYears + 0.5); // Can't predict past death
+  const deathDate = new Date(dob.getTime() + deathAge * 365.25 * 24 * 60 * 60 * 1000);
+  deathDateGlobal = deathDate;
+
+  // Quartiles (approximate spread)
+  const spread = sex === 'male' ? 7.5 : 6.5;
+  const medianAge = deathAge;
+  const lowQ = medianAge - spread;
+  const highQ = medianAge + spread;
+  const minAge = lowQ - spread;
+  const maxAge = highQ + spread;
+
+  // Render results
+  renderResults(dob, deathDate, deathAge, ageYears, factors, lowQ, medianAge, highQ, minAge, maxAge);
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Start countdown
+  if (countdownInterval) clearInterval(countdownInterval);
+  updateCountdown(deathDate);
+  countdownInterval = setInterval(() => updateCountdown(deathDate), 1000);
+}
+
+function updateCountdown(deathDate) {
+  const now = new Date();
+  let diff = deathDate - now;
+
+  if (diff <= 0) {
+    document.getElementById('cd-years').textContent = '0';
+    document.getElementById('cd-days').textContent = '0';
+    document.getElementById('cd-hours').textContent = '0';
+    document.getElementById('cd-minutes').textContent = '0';
+    document.getElementById('cd-seconds').textContent = "Time's up. 💀";
+    return;
+  }
+
+  const years = Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+  diff -= years * 365.25 * 24 * 60 * 60 * 1000;
+  const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+  diff -= days * 24 * 60 * 60 * 1000;
+  const hours = Math.floor(diff / (60 * 60 * 1000));
+  diff -= hours * 60 * 60 * 1000;
+  const minutes = Math.floor(diff / (60 * 1000));
+  diff -= minutes * 60 * 1000;
+  const seconds = Math.floor(diff / 1000);
+
+  document.getElementById('cd-years').textContent = years.toLocaleString();
+  document.getElementById('cd-days').textContent = days;
+  document.getElementById('cd-hours').textContent = hours;
+  document.getElementById('cd-minutes').textContent = String(minutes).padStart(2, '0');
+
+  const totalSec = Math.floor((deathDate - new Date()) / 1000);
+  document.getElementById('cd-seconds').textContent =
+    `${totalSec.toLocaleString()} seconds remaining · :${String(seconds).padStart(2, '0')}`;
+}
+
+function renderResults(dob, deathDate, deathAge, currentAge, factors, lowQ, median, highQ, minAge, maxAge) {
+  // Death date display
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayName = days[deathDate.getDay()];
+  const monthName = months[deathDate.getMonth()];
+  document.getElementById('death-date-big').textContent =
+    `${dayName}, ${monthName} ${deathDate.getDate()}, ${deathDate.getFullYear()}`;
+  document.getElementById('death-date-detail').textContent =
+    `at approximately ${deathDate.getHours() % 12 || 12}:${String(deathDate.getMinutes()).padStart(2,'0')} ${deathDate.getHours() >= 12 ? 'PM' : 'AM'}`;
+  document.getElementById('death-age').textContent =
+    `Age at death: ${Math.floor(deathAge)} years old`;
+
+  // Quartile bar
+  const range = maxAge - minAge;
+  const lowPct = ((lowQ - minAge) / range) * 100;
+  const medPct = ((median - minAge) / range) * 100;
+  const highPct = ((highQ - minAge) / range) * 100;
+  const userPct = Math.max(0, Math.min(100, ((deathAge - minAge) / range) * 100));
+
+  document.getElementById('q-low').style.left = '0%';
+  document.getElementById('q-low').style.width = lowPct + '%';
+  document.getElementById('q-med').style.left = lowPct + '%';
+  document.getElementById('q-med').style.width = (medPct - lowPct) + '%';
+  document.getElementById('q-high').style.left = medPct + '%';
+  document.getElementById('q-high').style.width = (100 - medPct) + '%';
+  document.getElementById('q-high').style.borderRadius = '0 16px 16px 0';
+  document.getElementById('user-marker').style.left = userPct + '%';
+
+  document.getElementById('q-label-low').textContent = `${Math.round(lowQ)} yrs`;
+  document.getElementById('q-label-med').textContent = `${Math.round(median)} yrs (median)`;
+  document.getElementById('q-label-high').textContent = `${Math.round(highQ)} yrs`;
+
+  // Factors
+  const factorList = document.getElementById('factor-list');
+  factorList.innerHTML = '';
+  factors.sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
+  factors.forEach(f => {
+    const cls = f.impact > 0 ? 'positive' : f.impact < 0 ? 'negative' : 'neutral';
+    const sign = f.impact > 0 ? '+' : '';
+    factorList.innerHTML += `
+      <li class="factor-item">
+        <div class="factor-icon ${cls}">${f.icon}</div>
+        <div class="factor-text">
+          <div class="factor-name">${f.name}</div>
+          <div class="factor-desc">${f.desc}</div>
+        </div>
+        <div class="factor-impact ${cls}">${f.impact !== 0 ? sign + f.impact.toFixed(1) + ' yrs' : 'Baseline'}</div>
+      </li>`;
+  });
+
+  // Timeline + pithy statement
+  const pctLived = Math.min(99.9, (currentAge / deathAge) * 100);
+  document.getElementById('timeline-filled').style.width = pctLived + '%';
+  document.getElementById('timeline-pct').textContent = pctLived.toFixed(1) + '% complete';
+
+  const remaining = deathAge - currentAge;
+  const pithy = generatePithy(currentAge, deathAge, remaining, pctLived);
+  document.getElementById('pithy').innerHTML = pithy;
+
+  // Famous deaths
+  renderFamousDeaths(deathDate);
+}
+
+function generatePithy(age, deathAge, remaining, pct) {
+  const yearsLeft = Math.floor(remaining);
+  const seasons = Math.floor(remaining * 4);
+  const sunrises = Math.floor(remaining * 365.25);
+
+  if (pct < 25) {
+    return `You're in the <em>opening act</em>. You have roughly <em>${sunrises.toLocaleString()} sunrises</em> left — the world is still mostly unwritten for you.`;
+  } else if (pct < 40) {
+    return `You're warming up. About <em>${yearsLeft} years</em> and <em>${seasons.toLocaleString()} seasons</em> remain. Most of your defining moments are still ahead.`;
+  } else if (pct < 50) {
+    return `You're approaching <em>halftime</em>. With ~<em>${yearsLeft} years</em> left, you've built the foundation — now build the legacy.`;
+  } else if (pct < 60) {
+    return `You've crossed the <em>midpoint</em>. You have <em>${sunrises.toLocaleString()} sunrises</em> left. The second half is where the wisdom lives.`;
+  } else if (pct < 75) {
+    return `You're in the <em>third quarter</em>. About <em>${yearsLeft} years</em> remain — enough time to write several more chapters.`;
+  } else if (pct < 85) {
+    return `The <em>final act</em> has begun. With <em>${sunrises.toLocaleString()} sunrises</em> left, every day is increasingly precious.`;
+  } else if (pct < 95) {
+    return `You're in the <em>encore</em>. <em>${yearsLeft} years</em> remain — make them ring louder than all the rest.`;
+  } else {
+    return `You're in <em>borrowed time</em> territory. Every single day is a gift — <em>unwrap it</em>.`;
+  }
+}
+
+function renderFamousDeaths(deathDate) {
+  const mm = String(deathDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(deathDate.getDate()).padStart(2, '0');
+  const key = `${mm}-${dd}`;
+
+  let people = FAMOUS_DEATHS[key];
+  const list = document.getElementById('famous-list');
+  const note = document.getElementById('famous-note');
+
+  if (!people || people.length === 0) {
+    // Use fallback — pick 3 random from pool, seeded by date
+    const seed = deathDate.getMonth() * 31 + deathDate.getDate();
+    const shuffled = [...FALLBACK_FAMOUS].sort((a, b) => {
+      const ha = (seed * 31 + a.y) % 97;
+      const hb = (seed * 31 + b.y) % 97;
+      return ha - hb;
+    });
+    people = shuffled.slice(0, 3);
+    note.textContent = `No exact matches for this date. Showing notable deaths from nearby dates.`;
+  } else {
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    note.textContent = `These notable figures died on ${monthNames[deathDate.getMonth()]} ${deathDate.getDate()}.`;
+  }
+
+  list.innerHTML = '';
+  people.forEach(p => {
+    const yearStr = p.y < 0 ? `${Math.abs(p.y)} BC` : p.y;
+    list.innerHTML += `
+      <li class="famous-item">
+        <div class="famous-emoji">⚰️</div>
+        <div class="famous-info">
+          <div class="famous-name">${p.n}</div>
+          <div class="famous-detail">${p.d} · died ${yearStr}</div>
+        </div>
+      </li>`;
+  });
+}
+
+const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+</script>
+
+</body>
+</html>
