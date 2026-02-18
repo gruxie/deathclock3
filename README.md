@@ -1,2 +1,6 @@
+Live site
+[Live site ](https://gruxie.github.io/deathclock3/)
+
+This webstie was a test case produced by Copilot CLI.  It took about 15 min of work mostly to construct this prompt:
 ## Prompt
 generate a website that is a single page app that calcualtes your mortality or estimated death date.  it should use basic data like age, sex, marital status, country, and smoking status; it should afford options for measurment (imperial, metric) with imperial set as the default; and United states shoudl be the default country.  Output should show 1) an active clock counting down from the current time to the estimated death date, 2) the estimated mortality date (day    of week, date, time), 3) a comparision to population medians (median and low and high quartiles) 3) a list of factors that are affecting the score up or down, 4) a pithy statment about where they are in their timeline and 5) a list of famous people who have died that day
